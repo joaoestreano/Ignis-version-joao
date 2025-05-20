@@ -2,12 +2,42 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 
 interface FiltroGraficoProps {
-  onAplicar: (filtros: { tipo: string; local: string; inicio: string; fim: string }) => void;
+  onAplicar: (filtros: {
+    tipo: string;
+    local: string;
+    inicio: string;
+    fim: string;
+    estado: string;
+    bioma: string;
+  }) => void;
 }
+
+const estados = [
+  { id: '11', nome: 'Rondônia' },
+  { id: '12', nome: 'Acre' },
+  { id: '13', nome: 'Amazonas' },
+  { id: '14', nome: 'Roraima' },
+  { id: '15', nome: 'Pará' },
+  { id: '16', nome: 'Amapá' },
+  { id: '17', nome: 'Tocantins' },
+  { id: '29', nome: 'Bahia' },
+  // adicione os demais estados que existirem no seu banco
+];
+
+const biomas = [
+  { id: '1', nome: 'Amazônia' },
+  { id: '2', nome: 'Cerrado' },
+  { id: '3', nome: 'Caatinga' },
+  { id: '4', nome: 'Mata Atlântica' },
+  { id: '5', nome: 'Pampa' },
+  { id: '6', nome: 'Pantanal' },
+];
 
 const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
   const [index1, setIndex1] = useState(0);
   const [index2, setIndex2] = useState(0);
+  const [estado, setEstado] = useState('');
+  const [bioma, setBioma] = useState('');
   const [inicio, setInicio] = useState('2025-03-20');
   const [fim, setFim] = useState('2025-05-09');
 
@@ -20,6 +50,8 @@ const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
       local: locais[index2],
       inicio,
       fim,
+      estado,
+      bioma,
     });
   };
 
@@ -48,6 +80,22 @@ const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
           </Slider2>
         </SliderContainer>
 
+        <Label>Estados:</Label>
+        <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <option value="">Todos</option>
+          {estados.map((e) => (
+            <option key={e.id} value={e.id}>{e.nome}</option>
+          ))}
+        </select>
+
+        <Label>Biomas:</Label>
+        <select value={bioma} onChange={(e) => setBioma(e.target.value)}>
+          <option value="">Todos</option>
+          {biomas.map((b) => (
+            <option key={b.id} value={b.id}>{b.nome}</option>
+          ))}
+        </select>
+
         <Datas>
           <Label>Datas:</Label>
           <InputGroup>
@@ -56,11 +104,8 @@ const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
               <Input
                 type="date"
                 id="inicio"
-                name="inicio"
                 value={inicio}
                 onChange={(e) => setInicio(e.target.value)}
-                min="2025-03-20"
-                max="2025-05-09"
               />
             </InputContainer>
             <InputContainer>
@@ -68,11 +113,8 @@ const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
               <Input
                 type="date"
                 id="fim"
-                name="fim"
                 value={fim}
                 onChange={(e) => setFim(e.target.value)}
-                min="2025-03-20"
-                max="2025-05-09"
               />
             </InputContainer>
           </InputGroup>
@@ -86,8 +128,7 @@ const FiltroGrafico: React.FC<FiltroGraficoProps> = ({ onAplicar }) => {
 
 export default FiltroGrafico;
 
-// Estilos
-
+// 🧱 estilos mantidos ou adaptados
 const FiltroContainer = styled.div`
   font-weight: bold;
   padding: 20px;
@@ -98,6 +139,7 @@ const FiltroContainer = styled.div`
   z-index: 1;
   margin-top: 2%;
   position: fixed;
+  color: white;
 `;
 
 const Filtros = styled.div`
@@ -111,7 +153,7 @@ const ToggleLabels1 = styled.div`
 
   span {
     font-size: 16px;
-    color: #000;
+    color: #fff;
     font-weight: bold;
   }
 `;
@@ -123,7 +165,7 @@ const ToggleLabels2 = styled.div`
 
   span {
     font-size: 16px;
-    color: #000;
+    color: #fff;
     font-weight: bold;
   }
 `;
@@ -186,7 +228,7 @@ const Label = styled.label`
   font-weight: bold;
   font-size: 1rem;
   display: block;
-  margin-bottom: 5px;
+  margin: 10px 0 5px 0;
 `;
 
 const InputGroup = styled.div`
