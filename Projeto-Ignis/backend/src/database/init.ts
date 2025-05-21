@@ -1,9 +1,129 @@
 import { query } from "./db";
-
 async function init() {
     return await query(`
         START TRANSACTION;
         CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TABLE mes_fogo (
+    escopo TEXT,
+    tipo TEXT,
+    mes TEXT,
+    valor NUMERIC
+);
+
+INSERT INTO mes_fogo (escopo, tipo, mes, valor) VALUES
+-- MAX
+('nacional', 'max', 'janeiro', 4657),
+('nacional', 'max', 'fevereiro', 3157),
+('nacional', 'max', 'março', 3383),
+('nacional', 'max', 'abril', 1702),
+('nacional', 'max', 'maio', 3578),
+('nacional', 'max', 'junho', 9179),
+('nacional', 'max', 'julho', 19364),
+('nacional', 'max', 'agosto', 63764),
+('nacional', 'max', 'setembro', 73141),
+('nacional', 'max', 'outubro', 28731),
+('nacional', 'max', 'novembro', 26424),
+('nacional', 'max', 'dezembro', 16924),
+
+-- MÉDIA
+('nacional', 'media', 'janeiro', 546.5),
+('nacional', 'media', 'fevereiro', 344.5),
+('nacional', 'media', 'março', 417),
+('nacional', 'media', 'abril', 371.7),
+('nacional', 'media', 'maio', 653.8),
+('nacional', 'media', 'junho', 1302.8),
+('nacional', 'media', 'julho', 2565.7),
+('nacional', 'media', 'agosto', 7891.3),
+('nacional', 'media', 'setembro', 10793.8),
+('nacional', 'media', 'outubro', 6292),
+('nacional', 'media', 'novembro', 3661.8),
+('nacional', 'media', 'dezembro', 1879),
+
+-- MÍNIMO
+('nacional', 'min', 'janeiro', 6),
+('nacional', 'min', 'fevereiro', 8),
+('nacional', 'min', 'março', 2),
+('nacional', 'min', 'abril', 1),
+('nacional', 'min', 'maio', 3),
+('nacional', 'min', 'junho', 1),
+('nacional', 'min', 'julho', 4),
+('nacional', 'min', 'agosto', 7),
+('nacional', 'min', 'setembro', 7),
+('nacional', 'min', 'outubro', 5),
+('nacional', 'min', 'novembro', 2),
+('nacional', 'min', 'dezembro', 6);
+--Qual mês tem maior risco de fogo médio:
+
+
+SELECT 
+  mes, 
+  ROUND(AVG(valor), 1) AS media_geral
+FROM mes_fogo
+WHERE tipo = 'media'
+GROUP BY mes
+ORDER BY media_geral DESC
+LIMIT 1;
+
+
+--Maior e menor média mensal
+
+-- Seleciona os 5 meses com maior média de risco de fogo (valores do tipo 'media')
+SELECT 
+  mes, 
+  ROUND(AVG(valor), 1) AS media_geral  -- Calcula a média e arredonda para 1 casa decimal
+FROM mes_fogo
+WHERE tipo = 'media'                   -- Filtra apenas os valores do tipo 'media'
+GROUP BY mes                           -- Agrupa por mês
+ORDER BY media_geral DESC              -- Ordena da maior média para a menor
+LIMIT 5;                               -- Mostra só os 5 primeiros resultados
+
+
+-- Consulta que retorna o mês com o maior valor máximo de risco de fogo
+SELECT 
+  mes, 
+  valor AS valor_maximo
+FROM mes_fogo
+WHERE tipo = 'max'         -- Considera apenas os valores máximos
+ORDER BY valor DESC        -- Ordena do maior para o menor
+LIMIT 1;                   -- Retorna só o maior valor (primeiro da lista)
+
+-- Consulta que retorna o mês com o menor valor mínimo de risco de fogo
+SELECT 
+  mes, 
+  valor AS valor_minimo
+FROM mes_fogo
+WHERE tipo = 'min'         -- Considera apenas os valores mínimos
+ORDER BY valor ASC         -- Ordena do menor para o maior
+LIMIT 10;                   -- Retorna só o menor valor (primeiro da lista)
+
+
+-- Consulta que retorna a média de risco de fogo por mês, arredondada para 1 casa decimal
+--Se quiser a mesma consulta para os tipos 'max' ou 'min', é só trocar essa linha: WHERE tipo = 'media'
+
+SELECT 
+  mes, 
+  ROUND(AVG(valor), 1) AS media_geral         -- Calcula a média de risco por mês e arredonda
+FROM mes_fogo
+WHERE tipo = 'media'                           -- Considera apenas os registros do tipo 'media'
+GROUP BY mes                                   -- Agrupa os dados por mês
+ORDER BY 
+  CASE                                         -- Ordena os meses na sequência correta do ano
+    WHEN mes = 'janeiro' THEN 1
+    WHEN mes = 'fevereiro' THEN 2
+    WHEN mes = 'março' THEN 3
+    WHEN mes = 'abril' THEN 4
+    WHEN mes = 'maio' THEN 5
+    WHEN mes = 'junho' THEN 6
+    WHEN mes = 'julho' THEN 7
+    WHEN mes = 'agosto' THEN 8
+    WHEN mes = 'setembro' THEN 9
+    WHEN mes = 'outubro' THEN 10
+    WHEN mes = 'novembro' THEN 11
+    WHEN mes = 'dezembro' THEN 12
+  END;
+
+--------------------------------------------------------------------------------
 
         CREATE TABLE IF NOT EXISTS Estados (
             id_estado INT PRIMARY KEY, 
@@ -1083,7 +1203,65 @@ async function init() {
     ('2025-04-02  ', ST_SetSRID(ST_MakePoint(-44.49852, -11.25339), 4326), 29, 3, 0.95),
     ('2025-04-02  ', ST_SetSRID(ST_MakePoint(-52.29568, -11.05795), 4326), 51, 1, 0.06),
     ('2025-04-02  ', ST_SetSRID(ST_MakePoint(-50.4972, -20.17527), 4326), 35, 4, 0.4);
-    
+
+
+    ----------------------------------------------------------------------------------------------------------------------
+    --------------criando view por estado risco de fogo---------------
+
+CREATE OR REPLACE VIEW vw_risco_estado_pernabuco AS
+SELECT r.id, r.data,r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Pernambuco';
+
+CREATE OR REPLACE VIEW vw_risco_estado_piaui AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Piauí';
+
+CREATE OR REPLACE VIEW vw_risco_estado_rio_de_janeiro AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Rio de Janeiro';
+
+CREATE OR REPLACE VIEW vw_risco_estado_rio_grande_do_norte AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Rio Grande do Norte';
+
+CREATE OR REPLACE VIEW vw_risco_estado_rio_grande_do_sul AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Rio Grande do Sul';
+
+CREATE OR REPLACE VIEW vw_risco_estado_rondonia AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Rondônia';
+
+CREATE OR REPLACE VIEW vw_risco_estado_roraima AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Roraima';
+
+CREATE OR REPLACE VIEW vw_risco_estado_santa_catarina AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Santa Catarina';
+
+CREATE OR REPLACE VIEW vw_risco_estado_sao_paulo AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'São Paulo';
+
+CREATE OR REPLACE VIEW vw_risco_estado_sergipe AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Sergipe';
+
+CREATE OR REPLACE VIEW vw_risco_estado_tocantins AS
+SELECT r.id, r.data, r.geometria, r.risco_fogo, e.estado
+FROM Risco r JOIN Estados e ON r.estado_id = e.id_estado
+WHERE e.estado = 'Tocantins';
  
     
     CREATE TABLE Foco_calor(

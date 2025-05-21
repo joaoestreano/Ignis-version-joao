@@ -186,6 +186,145 @@ JOIN Bioma b ON a.bioma_id = b.id
       res.status(500).json({ erro: "Erro ao buscar foco de calor", detalhes: err.message });
     }
   }
+  
+  // 📊 NOVO MÉTODO PARA GRÁFICO DE ÁREA QUEIMADA
+public async GraficoAreaQueimada(req: Request, res: Response): Promise<void> {
+  try {
+    const { estado, bioma, inicio, fim, local } = req.query;
+
+    let queryStr = `
+      SELECT 
+        ${local === 'Biomas' ? 'b.bioma' : 'e.estado'} AS categoria,
+        COUNT(*) AS total
+      FROM Area_Queimada a
+      JOIN Estados e ON a.estado_id = e.id_estado
+      JOIN Bioma b ON a.bioma_id = b.id
+      WHERE 1=1
+    `;
+
+    const values: any[] = [];
+
+    if (estado) {
+      queryStr += ` AND a.estado_id = $${values.length + 1}`;
+      values.push(Number(estado));
+    }
+
+    if (bioma) {
+      queryStr += ` AND a.bioma_id = $${values.length + 1}`;
+      values.push(Number(bioma));
+    }
+
+    if (inicio) {
+      queryStr += ` AND a.data_pas >= $${values.length + 1}`;
+      values.push(inicio);
+    }
+
+    if (fim) {
+      queryStr += ` AND a.data_pas <= $${values.length + 1}`;
+      values.push(fim);
+    }
+
+    queryStr += ` GROUP BY categoria ORDER BY total DESC`;
+
+    const resultado = await query(queryStr, values);
+    res.json(resultado);
+  } catch (err: any) {
+    res.status(500).json({ erro: "Erro ao gerar gráfico de área queimada", detalhes: err.message });
+  }
+}
+
+public async GraficoRiscoFogo(req: Request, res: Response): Promise<void> {
+  try {
+    const { estado, bioma, inicio, fim, local } = req.query;
+
+    let queryStr = `
+      SELECT 
+        ${local === 'Biomas' ? 'b.bioma' : 'e.estado'} AS categoria,
+        ROUND(AVG(r.risco_fogo), 2) AS total
+      FROM Risco r
+      JOIN Estados e ON r.estado_id = e.id_estado
+      JOIN Bioma b ON r.bioma_id = b.id
+      WHERE 1=1
+    `;
+
+    const values: any[] = [];
+
+    if (estado) {
+      queryStr += ` AND r.estado_id = $${values.length + 1}`;
+      values.push(Number(estado));
+    }
+
+    if (bioma) {
+      queryStr += ` AND r.bioma_id = $${values.length + 1}`;
+      values.push(Number(bioma));
+    }
+
+    if (inicio) {
+      queryStr += ` AND r.data >= $${values.length + 1}`;
+      values.push(inicio);
+    }
+
+    if (fim) {
+      queryStr += ` AND r.data <= $${values.length + 1}`;
+      values.push(fim);
+    }
+
+    queryStr += ` GROUP BY categoria ORDER BY total DESC`;
+
+    const resultado = await query(queryStr, values);
+    res.json(resultado);
+  } catch (err: any) {
+    res.status(500).json({ erro: "Erro ao gerar gráfico de risco de fogo", detalhes: err.message });
+  }
+}
+
+public async GraficoFocoCalor(req: Request, res: Response): Promise<void> {
+  try {
+    const { estado, bioma, inicio, fim, local } = req.query;
+
+    let queryStr = `
+      SELECT 
+        ${local === 'Biomas' ? 'b.bioma' : 'e.estado'} AS categoria,
+        ROUND(AVG(f.frp), 1) AS total
+      FROM Foco_Calor f
+      JOIN Estados e ON f.estado_id = e.id_estado
+      JOIN Bioma b ON f.bioma_id = b.id
+      WHERE 1=1
+    `;
+
+    const values: any[] = [];
+
+    if (estado) {
+      queryStr += ` AND f.estado_id = $${values.length + 1}`;
+      values.push(Number(estado));
+    }
+
+    if (bioma) {
+      queryStr += ` AND f.bioma_id = $${values.length + 1}`;
+      values.push(Number(bioma));
+    }
+
+    if (inicio) {
+      queryStr += ` AND f.data >= $${values.length + 1}`;
+      values.push(inicio);
+    }
+
+    if (fim) {
+      queryStr += ` AND f.data <= $${values.length + 1}`;
+      values.push(fim);
+    }
+
+    queryStr += ` GROUP BY categoria ORDER BY total DESC`;
+
+    const resultado = await query(queryStr, values);
+    res.json(resultado);
+  } catch (err: any) {
+    res.status(500).json({ erro: "Erro ao gerar gráfico de foco de calor", detalhes: err.message });
+  }
+}
+
+
 }
 
 export default new OcorrenciaController();
+

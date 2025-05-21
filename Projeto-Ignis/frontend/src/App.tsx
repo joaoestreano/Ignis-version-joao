@@ -54,8 +54,6 @@ const App: React.FC = () => {
             )
           ) : (
             <MeusGraficos filtros={filtros} />
-
-
           )}
         </Suspense>
       </MainContent>
