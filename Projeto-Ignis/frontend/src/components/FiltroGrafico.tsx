@@ -13,15 +13,16 @@ interface FiltroGraficoProps {
 }
 
 const estados = [
-  { id: '11', nome: 'Rondônia' },
-  { id: '12', nome: 'Acre' },
-  { id: '13', nome: 'Amazonas' },
-  { id: '14', nome: 'Roraima' },
-  { id: '15', nome: 'Pará' },
-  { id: '16', nome: 'Amapá' },
-  { id: '17', nome: 'Tocantins' },
-  { id: '29', nome: 'Bahia' },
-  // adicione os demais estados que existirem no seu banco
+  { id: '11', nome: 'Rondônia' }, { id: '12', nome: 'Acre' }, { id: '13', nome: 'Amazonas' },
+  { id: '14', nome: 'Roraima' }, { id: '15', nome: 'Pará' }, { id: '16', nome: 'Amapá' },
+  { id: '17', nome: 'Tocantins' }, { id: '29', nome: 'Bahia' }, { id: '27', nome: 'Alagoas'},
+  { id: '23', nome: 'Ceará'}, { id: '32', nome: 'Espirito Santo'}, { id: '52', nome: 'Goiás'},
+  { id: '21', nome: 'Maranhão'}, { id: '51', nome:'Mato Grosso'}, { id: '50', nome: 'Mato Grosso do Sul'},
+  { id: '31', nome:'Minas Gerais'}, { id: '25', nome:'Paraíba'}, { id: '41', nome:'Paraná'},
+  { id: '26', nome:'Pernambuco'}, { id: '22', nome: 'Piauí'}, { id: '33', nome: 'Rio de Janeiro'},
+  { id: '24', nome: 'Rio Grande do Norte'}, { id: '43', nome: 'Rio Grande do Sul'},
+  { id: '42', nome: 'Santa Catarina'}, { id: '35', nome: 'São Paulo'}, { id: '28', nome: 'Sergipe'},
+  { id: '53', nome: 'Distrito Federal'},
 ];
 
 const biomas = [

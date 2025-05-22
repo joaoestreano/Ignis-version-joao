@@ -37,7 +37,14 @@ const Grafico: React.FC<Props> = ({ filtros }) => {
   useEffect(() => {
     const fetchData = async () => {
       const query = montarQueryParams();
-      const url = `http://localhost:3000/api/grafico/area_queimada?${query}`;
+      const tipo = filtros.tipo === 'Focos'
+  ? 'foco_calor'
+  : filtros.tipo === 'Riscos de Fogo'
+  ? 'risco'
+  : 'area_queimada';
+
+const url = `http://localhost:3000/api/grafico/${tipo}?${query}`;
+
       try {
         const res = await fetch(url);
         const rawData = await res.json();
@@ -76,13 +83,14 @@ const Grafico: React.FC<Props> = ({ filtros }) => {
   return (
     <div
       style={{
-        padding: '20px',
-        backgroundColor: '#2b2b2b',
-        minHeight: '60vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        border: '4px solid #111',
+        position: 'absolute',
+        top: 0,
+        left: 300, // <-- ajuste se seu menu lateral tiver largura diferente
+        right: 0,
+        bottom: 0,
+        padding: '2rem',
+        backgroundColor: '#1a1a1a',
+        zIndex: 0,
       }}
     >
       {chartData.length <= 1 ? (
@@ -92,21 +100,21 @@ const Grafico: React.FC<Props> = ({ filtros }) => {
           chartType="BarChart"
           data={chartData}
           options={{
-            title: `Área Queimada por ${filtros.local === 'Biomas' ? 'Bioma' : 'Estado'}`,
+            title: `${filtros.tipo} por ${filtros.local === 'Biomas' ? 'Bioma' : 'Estado'}`,
             legend: { position: 'none' },
             bars: 'horizontal',
-            height: 400,
-            backgroundColor: '#2b2b2b',
+            height: '100%',
+            backgroundColor: '#1a1a1a',
             titleTextStyle: { color: '#fff' },
             hAxis: { minValue: 0, textStyle: { color: '#fff' } },
             vAxis: { textStyle: { color: '#fff' } },
           }}
           width="100%"
-          height="400px"
+          height="100%"
         />
       )}
     </div>
   );
-};
+        }  
 
 export default Grafico;
