@@ -1,28 +1,30 @@
-// Versão final de FiltroMapa com props transitórias e toggles funcionais
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FiltrosMapa } from '../entities/FiltroMapa';
+import {
+  FiltroContainer,
+  FiltrosContainer,
+  ToggleWrapper,
+  Slider,
+  SliderThumb,
+  Select,
+  Datas,
+  Label,
+  ButtonGroup,
+  AplicarButton,
+  LimparButton
+} from '../styles/FiltroMapa';
 
 interface FiltroMapaProps {
-  onFiltrar: (filtros: {
-    tipo: string;
-    estado: string;
-    bioma: string;
-    inicio: string;
-    fim: string;
-  }) => void;
+  onFiltrar: (filtros: FiltrosMapa) => void;
 }
 
-const SliderToggle = ({ label, active, onClick, color }: { label: string; active: boolean; onClick: () => void; color: string }) => (
-  <ToggleWrapper>
-    <span>{label}</span>
-    <Slider $ativo={active} $cor={color} onClick={onClick}>
-      <SliderThumb $ativo={active} />
-    </Slider>
-  </ToggleWrapper>
-);
-
 const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
+  const formatarParaDiaMesAno = (dataISO: string): string => {
+    const [ano, mes, dia] = dataISO.split("-");
+    return `${dia}/${mes}/${ano.slice(2)}`;
+  };
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,39 +32,112 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
   const [bioma, setBioma] = useState<number | ''>('');
   const [inicio, setInicio] = useState('');
   const [fim, setFim] = useState('');
-  const [tipo, setTipo] = useState<string>('');
+  const [tipo, setTipo] = useState<FiltrosMapa['tipo']>('');
+
+  const [datasDisponiveis, setDatasDisponiveis] = useState<string[]>([]);
 
   useEffect(() => {
-    if (location.pathname.includes("foco_calor")) setTipo("foco_calor");
-    else if (location.pathname.includes("area_queimada")) setTipo("area_queimada");
-    else if (location.pathname.includes("risco")) setTipo("risco");
-    else setTipo("");
+    if (location.pathname.includes('foco_calor')) setTipo('foco_calor');
+    else if (location.pathname.includes('area_queimada')) setTipo('area_queimada');
+    else if (location.pathname.includes('risco')) setTipo('risco');
+    else setTipo('');
   }, [location.pathname]);
 
-  const aplicarFiltro = () => {
-    const rota = tipo ? `/${tipo}` : '/';
-    navigate(rota);
-    setTimeout(() => {
-      onFiltrar({ tipo, estado: estado !== '' ? estado.toString() : '', bioma: bioma !== '' ? bioma.toString() : '', inicio, fim });
-    }, 100);
-  };
+  useEffect(() => {
+    const buscarDatas = async () => {
+      if (!tipo) return;
+      try {
+        const res = await fetch(`/api/datas_disponiveis?tipo=${tipo}`);
+        const data = await res.json();
+
+        const datasFormatadas = data.datas_disponiveis.map((d: string) =>
+          new Date(d).toISOString().split('T')[0].trim()
+        );
+
+        const datasUnicas: string[] = Array.from(new Set<string>(datasFormatadas)).sort();
+        setDatasDisponiveis(datasUnicas);
+      } catch (error) {
+        console.error('Erro ao buscar datas disponíveis:', error);
+      }
+    };
+
+    buscarDatas();
+  }, [tipo]);
+
+  const datasFimDisponiveis = useMemo(() => {
+    if (!inicio) return [];
+
+    const inicioDate = new Date(inicio);
+    const datas: string[] = [];
+
+    for (let i = 0; i < 7; i++) {
+      const novaData = new Date(inicioDate);
+      novaData.setDate(inicioDate.getDate() + i);
+      datas.push(novaData.toISOString().split('T')[0]);
+    }
+
+    return datas;
+  }, [inicio]);
 
   const limparFiltro = () => {
-    navigate("/");
-    setTipo("");
-    setEstado("");
-    setBioma("");
+    navigate('/');
+    setTipo('risco');
+    setEstado('');
+    setBioma('');
+    setInicio('');
+    setFim('');
+    onFiltrar({
+      tipo: '',
+      estado: '',
+      bioma: '',
+      inicio: '',
+      fim: '',
+    });
+  };
+
+  const aplicarFiltro = () => {
+    if (!inicio || !fim) {
+      alert('⚠️ Selecione um intervalo de datas antes de aplicar.');
+      return;
+    }
+
+    const rota = tipo ? `/${tipo}` : '/';
+    navigate(rota);
+    onFiltrar({
+      tipo,
+      estado: estado !== '' ? estado.toString() : '',
+      bioma: bioma !== '' ? bioma.toString() : '',
+      inicio,
+      fim,
+    });
   };
 
   return (
     <FiltroContainer>
-      <Filtros>
-        <SliderToggle label="Foco de Calor" color="#FF9800" active={tipo === 'foco_calor'} onClick={() => setTipo("foco_calor")} />
-        <SliderToggle label="Área de Queimada" color="#FF9800" active={tipo === 'area_queimada'} onClick={() => setTipo("area_queimada")} />
-        <SliderToggle label="Risco de Fogo" color="#FF9800" active={tipo === 'risco'} onClick={() => setTipo("risco")} />
+      <FiltrosContainer>
+        <ToggleWrapper>
+          <span>Foco de Calor</span>
+          <Slider $ativo={tipo === 'foco_calor'} $cor="#FF9800" onClick={() => setTipo('foco_calor')}>
+            <SliderThumb $ativo={tipo === 'foco_calor'} />
+          </Slider>
+        </ToggleWrapper>
 
-        <label htmlFor="id_estado">Estados</label>
-        <Select id="id_estado" value={estado} onChange={(e) => setEstado(e.target.value === '' ? '' : parseInt(e.target.value))}>
+        <ToggleWrapper>
+          <span>Área Queimada</span>
+          <Slider $ativo={tipo === 'area_queimada'} $cor="#FF9800" onClick={() => setTipo('area_queimada')}>
+            <SliderThumb $ativo={tipo === 'area_queimada'} />
+          </Slider>
+        </ToggleWrapper>
+
+        <ToggleWrapper>
+          <span>Risco de Fogo</span>
+          <Slider $ativo={tipo === 'risco'} $cor="#FF9800" onClick={() => setTipo('risco')}>
+            <SliderThumb $ativo={tipo === 'risco'} />
+          </Slider>
+        </ToggleWrapper>
+
+        <Label>Estado</Label>
+        <Select value={estado} onChange={(e) => setEstado(e.target.value === '' ? '' : parseInt(e.target.value))}>
           <option value="">Selecione um estado</option>
           <option value="12">Acre</option>
           <option value="27">Alagoas</option>
@@ -93,8 +168,8 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
           <option value="53">Distrito Federal</option>
         </Select>
 
-        <label htmlFor="bioma">Biomas</label>
-        <Select id="bioma" value={bioma} onChange={(e) => setBioma(e.target.value === '' ? '' : parseInt(e.target.value))}>
+        <Label>Bioma</Label>
+        <Select value={bioma} onChange={(e) => setBioma(e.target.value === '' ? '' : parseInt(e.target.value))}>
           <option value="">Selecione um bioma</option>
           <option value="3">Cerrado</option>
           <option value="2">Caatinga</option>
@@ -105,148 +180,44 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
         </Select>
 
         <Datas>
-          <Label>Datas:</Label>
-          <InputGroup>
-            <InputContainer>
-              <Label htmlFor="inicio">Início</Label>
-              <Input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
-            </InputContainer>
-            <InputContainer>
-              <Label htmlFor="fim">Fim</Label>
-              <Input type="date" value={fim} onChange={(e) => setFim(e.target.value)} />
-            </InputContainer>
-          </InputGroup>
+          <Label>Data Início</Label>
+          <Select value={inicio} onChange={(e) => { setInicio(e.target.value); setFim(''); }}>
+            <option value="">Selecione uma data</option>
+            {datasDisponiveis.map((data) => (
+              <option key={data} value={data}>
+                {formatarParaDiaMesAno(data)}
+              </option>
+            ))}
+          </Select>
+
+          <Label>Data Fim</Label>
+          <Select value={fim} onChange={(e) => setFim(e.target.value)} disabled={!inicio}>
+            <option value="">Selecione uma data</option>
+            {datasFimDisponiveis.map((data) => (
+              <option key={data} value={data}>
+                {formatarParaDiaMesAno(data)}
+              </option>
+            ))}
+          </Select>
         </Datas>
 
-        <AplicarButton onClick={aplicarFiltro}>Aplicar</AplicarButton>
-        
-        <LimparButton onClick={limparFiltro}>Limpar</LimparButton>
+        {(!inicio || !fim) && (
+          <p style={{ color: 'White', fontSize: '0.9rem' }}>
+            ⚠️ Selecione um intervalo de datas válido.
+          </p>
+        )}
 
-      </Filtros>
+        <ButtonGroup>
+          <AplicarButton onClick={aplicarFiltro} disabled={!inicio || !fim}>
+            Aplicar
+          </AplicarButton>
+          <LimparButton onClick={limparFiltro}>
+            Limpar
+          </LimparButton>
+        </ButtonGroup>
+      </FiltrosContainer>
     </FiltroContainer>
   );
 };
 
 export default FiltroMapa;
-
-const FiltroContainer = styled.div`
-  font-weight: bold;
-  padding: 20px;
-  background-color: #d32f2f;
-  height: 83vh;
-  width: 350px;
-  border-radius: 0px 8px 8px 8px;
-  z-index: 1;
-  margin-top: 2%;
-  position: fixed;
-`;
-
-const Filtros = styled.div`
-  padding: 10px 0;
-`;
-
-const ToggleWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 20px;
-
-  span {
-    margin-bottom: 5px;
-    font-size: 1rem;
-  }
-`;
-
-const Slider = styled.div<{ $ativo: boolean; $cor: string }>`
-  position: relative;
-  width: 100px;
-  height: 24px;
-  background-color: ${({ $ativo, $cor }) => ($ativo ? $cor : '#616161')};
-  border-radius: 12px;
-  border: 1px solid white;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-`;
-
-const SliderThumb = styled.div<{ $ativo: boolean }>`
-  position: absolute;
-  width: 40px;
-  height: 20px;
-  background-color: #333;
-  border-radius: 10px;
-  transition: transform 0.3s ease-in-out;
-  transform: ${({ $ativo }) => ($ativo ? 'translateX(60px)' : 'translateX(0)')};
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 5px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-`;
-
-const Datas = styled.div`
-  margin-top: 20px;
-`;
-
-const Label = styled.label`
-  font-weight: bold;
-  font-size: 1rem;
-  display: block;
-  margin-bottom: 5px;
-`;
-
-const InputGroup = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-`;
-
-const InputContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 48%;
-`;
-
-const Input = styled.input`
-  padding: 8px;
-  width: 150px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  margin-top: 5px;
-`;
-
-const AplicarButton = styled.button`
-  margin-top: 10px;
-  margin-left: 250px;
-  width: 100px;
-  padding: 8px;
-  background-color: #616161;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-
-  &:hover {
-    background-color: #388E3C;
-  }
-`;
-
-const LimparButton = styled.button`
-  margin-top:  10px;
-  margin-left: 250px;
-  width: 100px;
-  padding: 8px;
-  background-color: #616161;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-
-  &:hover {
-    background-color: #388E3C;
-  }
-`;

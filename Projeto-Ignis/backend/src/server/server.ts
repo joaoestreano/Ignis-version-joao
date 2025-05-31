@@ -18,5 +18,4 @@ server.get("/", (_, res) => {
   res.send("API do Projeto Ignis está ativa!");
 });
 
-
 export { server };
