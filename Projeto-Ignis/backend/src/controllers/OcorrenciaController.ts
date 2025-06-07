@@ -34,7 +34,7 @@ class OcorrenciaController {
         return;
       }
 
-      if (diffDias(inicio as string, fim as string) > 60) {
+      if (diffDias(inicio as string, fim as string) > 100) {
         res.status(400).json({ erro: "O intervalo máximo permitido é de 60 dias." });
         return;
       }
@@ -85,7 +85,7 @@ class OcorrenciaController {
         return;
       }
 
-      if (diffDias(inicio as string, fim as string) > 60) {
+      if (diffDias(inicio as string, fim as string) > 100) {
         res.status(400).json({ erro: "O intervalo máximo permitido é de 60 dias." });
         return;
       }
@@ -118,7 +118,7 @@ class OcorrenciaController {
         values.push(Number(bioma));
       }
 
-      baseQuery += ' LIMIT 10000';
+      baseQuery += ' LIMIT 100000';
 
       const resultado: ResultadoQuery[] = await query(baseQuery, values);
       res.json(resultado);
@@ -137,7 +137,7 @@ class OcorrenciaController {
         return;
       }
 
-      if (diffDias(inicio as string, fim as string) > 60) {
+      if (diffDias(inicio as string, fim as string) > 100) {
         res.status(400).json({ erro: "O intervalo máximo permitido é de 60 dias." });
         return;
       }

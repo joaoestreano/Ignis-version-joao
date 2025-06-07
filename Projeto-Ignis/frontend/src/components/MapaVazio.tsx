@@ -12,12 +12,7 @@ const brasilBounds: L.LatLngBoundsExpression = [
 const MapaVazio: React.FC = () => {
   return (
     <MapaContainer>
-      <MapContainer
-        center={[-15.78, -47.92]}
-        zoom={4}
-        maxBounds={brasilBounds}
-        maxBoundsViscosity={1.0}
-        style={{ width: '100%', height: '100%' }}
+      <MapContainer center={[-15.78, -47.92]} zoom={4} minZoom={5} style={{ height: '95%', width: '75%', marginLeft: '24%', marginTop: '10px', borderRadius: '10px' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

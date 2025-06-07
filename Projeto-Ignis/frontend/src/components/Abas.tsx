@@ -21,19 +21,19 @@ const Abas: React.FC<AbasProps> = ({ onClick, ativo, children }) => {
   };
 
   return (
+    <>
     <AbasContainer>
-      <Button $ativo={ativo === 'mapa'} onClick={() => handleAba('mapa')}>
+      <FixedButton $ativo={ativo === 'mapa'} style={{ left: '10px' }} onClick={() => handleAba('mapa')}>
         Mapa
-      </Button>
-      <Button $ativo={ativo === 'grafico'} onClick={() => handleAba('grafico')}>
+      </FixedButton>
+      <FixedButton $ativo={ativo === 'grafico'} style={{ left: '110px' }} onClick={() => handleAba('grafico')}>
         Gráfico
-      </Button>
+      </FixedButton>
       <div>{children}</div>
     </AbasContainer>
+    </>
   );
 };
-
-export default Abas;
 
 const AbasContainer = styled.div`
   display: flex;
@@ -46,7 +46,9 @@ const AbasContainer = styled.div`
   position: fixed;
 `;
 
-const Button = styled.button<{ $ativo: boolean }>`
+const FixedButton = styled.button<{ $ativo: boolean }>`
+  position: fixed;
+  top: 60px;
   padding: 8px 15px;
   border: none;
   cursor: pointer;
@@ -55,8 +57,11 @@ const Button = styled.button<{ $ativo: boolean }>`
   transition: background-color 0.3s, color 0.3s;
   background-color: ${(props) => (props.$ativo ? '#d32f2f' : '#ff9595')};
   color: white;
+  z-index: 999;
 
   &:hover {
     background-color: ${(props) => (props.$ativo ? '#c62828' : '#ff6f6f')};
   }
 `;
+
+export default Abas;

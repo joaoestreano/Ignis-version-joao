@@ -122,7 +122,7 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   }, [dados, tipo]);
 
   return (
-    <MapContainer center={[-15.78, -47.92]} zoom={4} style={{ height: '100vh', width: '100%' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}>
+    <MapContainer center={[-15.78, -47.92]} zoom={4} minZoom={5} style={{ height: '95vh', width: '75%', marginLeft: '24%', marginTop: '70px', borderRadius: '10px' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
 
       {/* Exibe ícones de risco de fogo por estado */}

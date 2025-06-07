@@ -21,9 +21,9 @@ interface FiltroMapaProps {
 
 const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
   const formatarParaDiaMesAno = (dataISO: string): string => {
-    const [ano, mes, dia] = dataISO.split("-");
-    return `${dia}/${mes}/${ano.slice(2)}`;
-  };
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano.slice(2)}`;
+};
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,64 +44,52 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const buscarDatas = async () => {
-      if (!tipo) return;
-      try {
-        const res = await fetch(`/api/datas_disponiveis?tipo=${tipo}`);
-        const data = await res.json();
+  const buscarDatas = async () => {
+    if (!tipo) return;
+    try {
+      const res = await fetch(`/api/datas_disponiveis?tipo=${tipo}`);
+      const data = await res.json();
 
-        const datasFormatadas = data.datas_disponiveis.map((d: string) =>
-          new Date(d).toISOString().split('T')[0].trim()
-        );
+      // Formata as datas como 'YYYY-MM-DD'
+      const datasFormatadas = data.datas_disponiveis.map((d: string) =>
+        new Date(d).toISOString().split('T')[0].trim()
+      );
 
-        const datasUnicas: string[] = Array.from(new Set<string>(datasFormatadas)).sort();
-        setDatasDisponiveis(datasUnicas);
-      } catch (error) {
-        console.error('Erro ao buscar datas disponíveis:', error);
-      }
-    };
-
-    buscarDatas();
-  }, [tipo]);
-
-  const datasFimDisponiveis = useMemo(() => {
-    if (!inicio) return [];
-
-    const inicioDate = new Date(inicio);
-    const datas: string[] = [];
-
-    for (let i = 0; i < 7; i++) {
-      const novaData = new Date(inicioDate);
-      novaData.setDate(inicioDate.getDate() + i);
-      datas.push(novaData.toISOString().split('T')[0]);
+      // Remove duplicadas
+      const datasUnicas: string[] = Array.from(new Set<string>(datasFormatadas)).sort();
+      setDatasDisponiveis(datasUnicas);
+    
+    } catch (error) {
+      console.error('Erro ao buscar datas disponíveis:', error);
     }
-
-    return datas;
-  }, [inicio]);
-
-  const limparFiltro = () => {
-    navigate('/');
-    setTipo('risco');
-    setEstado('');
-    setBioma('');
-    setInicio('');
-    setFim('');
-    onFiltrar({
-      tipo: '',
-      estado: '',
-      bioma: '',
-      inicio: '',
-      fim: '',
-    });
   };
 
-  const aplicarFiltro = () => {
-    if (!inicio || !fim) {
-      alert('⚠️ Selecione um intervalo de datas antes de aplicar.');
-      return;
-    }
+  buscarDatas();
+}, [tipo]);
 
-    const rota = tipo ? `/${tipo}` : '/';
+const datasFimDisponiveis = useMemo(() => {
+  if (!inicio) return [];
+
+  const inicioDate = new Date(inicio);
+  const datas: string[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const novaData = new Date(inicioDate);
+    novaData.setDate(inicioDate.getDate() + i);
+    datas.push(novaData.toISOString().split('T')[0]);
+  }
+
+  return datas;
+}, [inicio]);
+
+const aplicarFiltro = () => {
+  if (!inicio || !fim) {
+    alert('⚠️ Selecione um intervalo de datas antes de aplicar.');
+    return;
+  }
+
+
+const rota = tipo ? `/${tipo}` : '/';
     navigate(rota);
     onFiltrar({
       tipo,
@@ -111,6 +99,24 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
       fim,
     });
   };
+ 
+
+const limparFiltro = () => {
+  navigate('/');
+  setTipo('risco');
+  setEstado('');
+  setBioma('');
+  setInicio('');
+  setFim('');
+  onFiltrar({
+    tipo: '',
+    estado: '',
+    bioma: '',
+    inicio: '',
+    fim: '',
+  });
+};
+
 
   return (
     <FiltroContainer>
@@ -201,12 +207,13 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
           </Select>
         </Datas>
 
+
         {(!inicio || !fim) && (
           <p style={{ color: 'White', fontSize: '0.9rem' }}>
             ⚠️ Selecione um intervalo de datas válido.
           </p>
         )}
-
+        
         <ButtonGroup>
           <AplicarButton onClick={aplicarFiltro} disabled={!inicio || !fim}>
             Aplicar

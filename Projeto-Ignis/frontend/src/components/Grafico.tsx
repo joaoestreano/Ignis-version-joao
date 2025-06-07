@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Chart } from 'react-google-charts';
+import { FiltrosGrafico } from '../entities/FiltroGrafico';
 import { GraficoContainer } from '../styles/GraficoStyle';
 
 interface DadoGrafico {
@@ -7,24 +8,16 @@ interface DadoGrafico {
   total: number;
 }
 
-interface FiltrosGrafico {
-  tipo: string;
-  estado: string;
-  bioma: string;
-  inicio: string;
-  fim: string;
-}
-
 interface Props {
   filtros: FiltrosGrafico;
 }
 
+// 🔥 Montagem dos parâmetros da query
 const montarQueryParams = (filtros: FiltrosGrafico) => {
   const params = new URLSearchParams();
   if (filtros.inicio) params.append('inicio', filtros.inicio);
   if (filtros.fim) params.append('fim', filtros.fim);
-  if (filtros.estado) params.append('estado', filtros.estado);
-  if (filtros.bioma) params.append('bioma', filtros.bioma);
+  params.append('local', filtros.local);
   return params.toString();
 };
 
@@ -40,6 +33,7 @@ const Grafico: React.FC<Props> = ({ filtros }) => {
         const res = await fetch(url);
         const rawData = await res.json();
         if (Array.isArray(rawData)) {
+          // 🔥 Filtra valores negativos
           const filtrados = rawData.filter(
             (d: DadoGrafico) => Number(d.total) >= 0
           );
@@ -101,7 +95,7 @@ const Grafico: React.FC<Props> = ({ filtros }) => {
                 : filtros.tipo === 'foco_calor'
                 ? 'Foco de Calor'
                 : 'Área Queimada'
-            } por categoria`,
+            } por ${filtros.local === 'bioma' ? 'Bioma' : 'Estado'}`,
             legend: { position: 'none' },
             bars: 'horizontal',
             backgroundColor: '#0a1a2f',

@@ -39,14 +39,16 @@ const LogoGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 10px; /* Espaço entre logo e título */
+  margin-top: 20px;
 `;
 
 // Estilo do título
 const Title = styled.h1`
   color: white;
-  margin-left: 5vh;
+  margin-left: 50px;
   font-size: 1.5rem;
   position: fixed;
+  margin-top: 20px;
 `;
 
 // Estilo da imagem do logo
